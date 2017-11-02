@@ -2,9 +2,10 @@
 
 """
 Author: Vishav Kandola
-Latest version found at: https://www.github.com/vkandola/ubc-cpsc-lab-finder
+Source hosted @ https://www.github.com/vkandola/ubc-cpsc-lab-finder
+Script output viewable @ www.vkandola.me/projects/lab-checker/output.txt
 
-Some improvements:
+Some potential future improvements:
 - Add parallelism to https requests (mindful of not spamming requests..)
 - Add proper handling of bookings that occur on multiple days with different end times
 
@@ -26,10 +27,12 @@ calendar_url = base_url + "/students/undergrad/services/lab-availability"
 normal_time = re.compile("([1-9]|1[012]):([0-5][0-9])([ap])m")
 
 # Some strings
-
 free_slot_name = "Open"
 booked_slot_name = "Booked"
 
+# Some configurable flags
+labs_end_ten_minutes_early = False
+minimum_gap_between_labs = 10 # in minutes
 
 # HTML Parser helpers, broken up into pages
 def get_all_lab_rooms():
@@ -62,7 +65,7 @@ def get_booking_end(name, url, start):
         hour += 12
     minute = int(groups[1])
 
-    return hour * 60 + minute
+    return hour * 60 + minute - (10 if labs_end_ten_minutes_early else 0)
 
 
 def get_bookings_for_lab(lab, url):
@@ -92,14 +95,17 @@ def minute_to_time(minutes):
     return ("0" if hour < 10 else "") + str(hour) + ":" + ("0" if minute < 10 else "") + str(minute)
 
 
-# Helper to parse bookings and compute free times,
 def add_free_slots(b):
     """
     Takes the bookings and adds pseudo bookings for the free time slots, returning the resulting list of (name, start)
     tuples.
 
-    Assumes (1) Labs are open 24 hours, which is generally true except for fires, floods or maintenance
-            (2) and that labs don't overlap.
+    Assumes (1) Labs are open 24 hours, which is generally true except for the occasional fire, flood or maintenance
+                    that occurs
+            (2) That lab bookings don't overlap
+            (3) That a X to Y time lab is strictly free at time Y, not Y - 10 minutes (to be nice to late running labs),
+                    note that this is configurable via global variable labs_end_ten_minutes_early
+            (4) Labs are never cancelled, which may not be true during the class's midterm week or holidays
     """
 
     start_minute = 0
@@ -116,7 +122,7 @@ def add_free_slots(b):
 
         bname, bstart, bend = b[0]
 
-        if cur_minute < bstart:
+        if cur_minute < bstart and bstart - cur_minute > minimum_gap_between_labs:
             bookings.append((free_slot_name, cur_minute, bstart))
         bookings.append(b.pop(0))
         cur_minute = bend
