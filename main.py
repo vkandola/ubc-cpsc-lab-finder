@@ -122,12 +122,12 @@ def add_free_slots(b):
             bookings.append((free_slot_name, cur_minute, end_minute))
             break
 
-        bname, bstart, bend = b[0]
+        booking_name, booking_start, booking_bend = b[0]
 
-        if cur_minute < bstart and bstart - cur_minute > minimum_gap_between_labs:
-            bookings.append((free_slot_name, cur_minute, bstart))
+        if cur_minute < booking_start and booking_start - cur_minute > minimum_gap_between_labs:
+            bookings.append((free_slot_name, cur_minute, booking_start))
         bookings.append(b.pop(0))
-        cur_minute = bend
+        cur_minute = booking_bend
 
     return bookings
 
