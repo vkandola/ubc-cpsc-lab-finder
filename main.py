@@ -56,6 +56,8 @@ def get_booking_end(name, url, start):
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
 
     end_date_12hr = soup.select(".date-display-end")[0].text.lower()
+    if name == 'ACM contest':
+        return 24*60
     groups = normal_time.match(end_date_12hr).groups()
 
     hour = int(groups[0])
