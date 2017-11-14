@@ -26,13 +26,15 @@ calendar_url = base_url + "/students/undergrad/services/lab-availability"
 # Compiled Regex
 normal_time = re.compile("([1-9]|1[012]):([0-5][0-9])([ap])m")
 
-# Some strings
+# Some display strings
 free_slot_name = "Open"
 booked_slot_name = "Booked"
 
 # Some configurable flags
 labs_end_ten_minutes_early = False
-minimum_gap_between_labs = 10 # in minutes
+minimum_gap_between_labs = 10  # in minutes
+merge_booked_slots = True
+
 
 # HTML Parser helpers, broken up into pages
 def get_all_lab_rooms():
@@ -81,6 +83,22 @@ def get_bookings_for_lab(lab, url):
 
     # Do an additional fetch for the end times, since they aren't explicitly listed on the lab calendar page.
     today_slots = [(name, start, get_booking_end(name, url, start)) for name, start, url in today_slots]
+
+    # Merge booking slots that are back-to-back (within the minimum gap)
+    if merge_booked_slots:
+        temporary_slots = []
+        while today_slots:
+            booking_name, booking_start, booking_end = today_slots.pop(0)
+            while today_slots:
+                next_booking_name, next_booking_start, next_booking_end = today_slots[0]
+                if next_booking_start - booking_end <= minimum_gap_between_labs:
+                    booking_name = booking_name + ", " + next_booking_name
+                    booking_end = next_booking_end
+                    today_slots.pop(0)
+                else:
+                    break
+            temporary_slots.append((booking_name, booking_start, booking_end))
+        today_slots = temporary_slots
 
     # The bookings are already sorted by their start time for us.
     return today_slots
@@ -136,9 +154,9 @@ def run():
     labs = get_all_lab_rooms()
     lab_reservations = dict([(x, get_bookings_for_lab(x, url)) for x, url in labs.items()])
     for lab, bookings in lab_reservations.items():
-        free_slots = add_free_slots(bookings)
+        bookings_with_free_slots = add_free_slots(bookings)
         print("%s:" % lab)
-        for name, start, end in free_slots:
+        for name, start, end in bookings_with_free_slots:
             displayed_name = name if name == free_slot_name else booked_slot_name
             print("%10s %5s to %5s" % (displayed_name, minute_to_time(start), minute_to_time(end)))
 
