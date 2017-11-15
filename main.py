@@ -10,7 +10,7 @@ Some potential future improvements:
 - Add proper handling of bookings that occur on multiple days with different end times
 
 Notes about this script:
-- Will likely break if the style sheets, URLs or or DOM structure changes changes
+- Will likely break if the style sheets, URLs or DOM structure changes changes
 - Is conservative in the time estimates, e.g. a 10-11AM lab doesn't end at 10:50AM although that is likely the case
 """
 
