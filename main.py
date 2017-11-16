@@ -79,7 +79,7 @@ def get_bookings_for_lab(lab, url):
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
     today = soup.select(".today")[0]
     booking_rows = zip(today.select("a"), today.select("span"))
-    today_slots = [(link.text, time_to_minutes(time.text), base_url + link['href']) for link, time in booking_rows]
+    today_slots = [(link.text, time_str_to_minutes(time.text), base_url + link['href']) for link, time in booking_rows]
 
     # Do an additional fetch for the end times, since they aren't explicitly listed on the lab calendar page.
     today_slots = [(name, start, get_booking_end(name, url, start)) for name, start, url in today_slots]
@@ -104,12 +104,12 @@ def get_bookings_for_lab(lab, url):
     return today_slots
 
 
-def time_to_minutes(time):
+def time_str_to_minutes(time):
     time_split = time.split(':')
     return int(int(time_split[0]) * 60 + int(time_split[1]))
 
 
-def minute_to_time(minutes):
+def minute_to_time_str(minutes):
     hour = minutes // 60
     minute = minutes % 60
     return ("0" if hour < 10 else "") + str(hour) + ":" + ("0" if minute < 10 else "") + str(minute)
@@ -158,7 +158,7 @@ def run():
         print("%s:" % lab)
         for name, start, end in bookings_with_free_slots:
             displayed_name = name if name == free_slot_name else booked_slot_name
-            print("%10s %5s to %5s" % (displayed_name, minute_to_time(start), minute_to_time(end)))
+            print("%10s %5s to %5s" % (displayed_name, minute_to_time_str(start), minute_to_time_str(end)))
 
 
 if __name__ == '__main__':
