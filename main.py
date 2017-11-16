@@ -3,7 +3,7 @@
 """
 Author: Vishav Kandola
 Source hosted @ https://www.github.com/vkandola/ubc-cpsc-lab-finder
-Script output viewable @ www.vkandola.me/projects/lab-checker/output.txt
+Sample output viewable @ www.vkandola.me/projects/ubc-cpsc-lab-finder/raw.txt
 
 Some potential future improvements:
 - Add parallelism to https requests (mindful of not spamming requests..)
